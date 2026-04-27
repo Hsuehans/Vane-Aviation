@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风向标航空 学员证生成器</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  *{box-sizing:border-box;font-family:"Microsoft YaHei",sans-serif;margin:0;padding:0;}
+  body{background:#f7f8fa;padding:20px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+
+  /* 操作面板 */
+  .editor{
+    background:#fff;
+    padding:24px;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    width:100%;
+    max-width:420px;
+  }
+  .form-group{margin-bottom:16px;}
+  label{display:block;margin-bottom:6px;font-weight:500;color:#333;}
+  input{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:16px;}
+  button{
+    width:100%;padding:14px;border:none;border-radius:8px;
+    background:#2563eb;color:#fff;font-size:16px;cursor:pointer;margin-top:8px;
+  }
+  .btn-download{background:#16a34a;margin-top:12px;}
+
+  /* 电脑端正常大小 */
+  #card{
+    width: 960px;
+    height: 1391px;
+    position: relative;
+    display: none;
+    margin: 0 auto;
+  }
+  #bg{
+    position:absolute;
+    left:0;top:0;
+    width:100%;height:100%;
+    object-fit:cover;
+  }
+  #nameText{
+    position:absolute;
+    left:300px;
+    top:1080px;
+    font-size:54px;
+    color:#000;
+  }
+  #dateText{
+    position:absolute;
+    left:330px;
+    top:1195px;
+    font-size:54px;
+    color:#000;
+  }
+  #avatarBox{
+    position:absolute;
+    left:320px;
+    top:420px;
+    width:320px;
+    height:420px;
+    background:#fff;
+  }
+  #avatar{
+    width:100%;height:100%;
+    object-fit:cover;
+  }
+
+  /* 手机端强制小尺寸 + 强制显示背景 */
+  @media screen and (max-width:768px){
+    #card{
+      width: 350px !important;
+      height: 505px !important;
+      margin:20px auto !important;
+      display: block !important;
+    }
+    #bg{
+      display:block !important;
+      visibility:visible !important;
+      opacity:1 !important;
+    }
+    #nameText{
+      left:105px !important;
+      top:395px !important;
+      font-size:19px !important;
+    }
+    #dateText{
+      left:125px !important;
+      top:435px !important;
+      font-size:17px !important;
+    }
+    #avatarBox{
+      left:115px !important;
+      top:150px !important;
+      width:120px !important;
+      height:160px !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="editor">
+  <div class="form-group">
+    <label>1. 上传学员头像</label>
+    <input type="file" id="avatarInput" accept="image/*">
+  </div>
+  <div class="form-group">
+    <label>2. 姓名</label>
+    <input type="text" id="nameInput" placeholder="请输入姓名">
+  </div>
+  <div class="form-group">
+    <label>3. 有效期至</label>
+    <input type="text" id="dateInput" placeholder="例如：2027.01.01">
+  </div>
+  <button onclick="updateCard()">预览学员证</button>
+  <button class="btn-download" onclick="downloadCard()">下载高清学员证</button>
+</div>
+
+<div id="card">
+  <!-- 手机专用压缩图 + 电脑原图 -->
+  <img id="bg" src="https://img.wanwang.xin/contents/sitefiles6220/31104044/images/175980200.jpg">
+  <div id="avatarBox">
+    <img id="avatar">
+  </div>
+  <div id="nameText"></div>
+  <div id="dateText"></div>
+</div>
+
+<script>
+// 强制手机端显示背景
+document.addEventListener('DOMContentLoaded', function(){
+  const isMobile = window.innerWidth < 768;
+  const bg = document.getElementById('bg');
+  bg.setAttribute('crossorigin', 'anonymous');
+  
+  if(isMobile){
+    bg.style.display = 'block';
+    bg.style.visibility = 'visible';
+    bg.style.opacity = '1';
+  }
+});
+
+// 头像
+document.getElementById('avatarInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      document.getElementById('avatar').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// 更新信息
+function updateCard(){
+  const name = document.getElementById('nameInput').value.trim();
+  const date = document.getElementById('dateInput').value.trim();
+  document.getElementById('nameText').innerText = name;
+  document.getElementById('dateText').innerText = date;
+  document.getElementById('card').style.display = "block";
+}
+
+// 下载
+function downloadCard(){
+  updateCard();
+  setTimeout(() => {
+    html2canvas(document.getElementById('card'), {
+      scale: 2,
+      useCORS: true,
+    }).then(canvas => {
+      const a = document.createElement('a');
+      a.download = "风向标航空学员证.png";
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+  }, 800);
+}
+</script>
+</body>
+</html>
