@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>风向标航空 学员证生成器</title>
+<!-- 改用 GitHub 源的 html2canvas（备选，防止CDN加载问题） -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
   *{box-sizing:border-box;font-family:"Microsoft YaHei",sans-serif;margin:0;padding:0;}
@@ -40,6 +41,11 @@
     left:0;top:0;
     width:100%;height:100%;
     object-fit:cover;
+    /* 图片加载失败兜底 */
+    background-color: #f5f5f5;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="https://img.wanwang.xin/contents/sitefiles6220/31104044/images/175980200.jpg"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-2V9h-2V7h4v10z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
   }
   #nameText{
     position:absolute;
@@ -120,8 +126,9 @@
 </div>
 
 <div id="card">
-  <!-- 手机专用压缩图 + 电脑原图 -->
-  <img id="bg" src="https://img.wanwang.xin/contents/sitefiles6220/31104044/images/175980200.jpg">
+  <!-- 本地图片路径：根目录下的 images 文件夹，图片名改为 bg.jpg（可自定义） -->
+  <img id="bg" src="./images/bg.jpg" 
+       onerror="this.onerror=null; this.src='https://img.wanwang.xin/contents/sitefiles6220/31104044/images/175980200.jpg';">
   <div id="avatarBox">
     <img id="avatar">
   </div>
@@ -130,20 +137,29 @@
 </div>
 
 <script>
-// 强制手机端显示背景
+// 强制手机端显示背景 + 禁用缓存
 document.addEventListener('DOMContentLoaded', function(){
   const isMobile = window.innerWidth < 768;
   const bg = document.getElementById('bg');
+  // 禁用缓存（GitHub Pages 缓存优化）
+  bg.src = bg.src + (bg.src.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
   bg.setAttribute('crossorigin', 'anonymous');
+  bg.setAttribute('referrerpolicy', 'no-referrer');
   
   if(isMobile){
     bg.style.display = 'block';
     bg.style.visibility = 'visible';
     bg.style.opacity = '1';
+    // 手机端重试加载
+    setTimeout(() => {
+      if(!bg.complete || bg.naturalWidth === 0){
+        bg.src = bg.src.replace(/t=\d+/, 't=' + new Date().getTime());
+      }
+    }, 500);
   }
 });
 
-// 头像
+// 头像上传
 document.getElementById('avatarInput').addEventListener('change', function(e){
   const file = e.target.files[0];
   if(file){
@@ -164,20 +180,25 @@ function updateCard(){
   document.getElementById('card').style.display = "block";
 }
 
-// 下载
+// 下载（适配 GitHub Pages 跨域）
 function downloadCard(){
   updateCard();
   setTimeout(() => {
     html2canvas(document.getElementById('card'), {
       scale: 2,
       useCORS: true,
+      allowTaint: true, // 兼容本地图片跨域截图
+      logging: false
     }).then(canvas => {
       const a = document.createElement('a');
       a.download = "风向标航空学员证.png";
       a.href = canvas.toDataURL('image/png');
       a.click();
+    }).catch(err => {
+      alert('下载失败，请检查图片是否加载完成！');
+      console.error('下载错误：', err);
     });
-  }, 800);
+  }, 1000);
 }
 </script>
 </body>
